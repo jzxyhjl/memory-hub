@@ -2,7 +2,8 @@ import os
 from typing import Any, Optional
 
 import psycopg
-from fastapi import FastAPI, HTTPException
+from psycopg.types.json import Jsonb
+from fastapi import FastAPI, Header, HTTPException
 from pydantic import BaseModel, Field
 
 
@@ -12,6 +13,7 @@ DB_NAME = os.getenv("DB_NAME", "memoryhub")
 DB_USER = os.getenv("DB_USER", "memoryhub")
 DB_PASSWORD = os.getenv("DB_PASSWORD", "change_me")
 TSV_CONFIG = os.getenv("PG_TSV_CONFIG", "simple")
+API_TOKEN = os.getenv("MEMORY_API_TOKEN", "").strip()
 
 
 def dsn() -> str:
@@ -47,8 +49,28 @@ class MemorySearch(BaseModel):
 app = FastAPI(title="Memory Hub API", version="0.1.0")
 
 
+def verify_api_token(
+    authorization: Optional[str] = Header(default=None),
+    x_api_token: Optional[str] = Header(default=None),
+) -> None:
+    if not API_TOKEN:
+        return
+
+    bearer_token = None
+    if authorization and authorization.lower().startswith("bearer "):
+        bearer_token = authorization[7:].strip()
+
+    provided_token = x_api_token or bearer_token
+    if provided_token != API_TOKEN:
+        raise HTTPException(status_code=401, detail="unauthorized")
+
+
 @app.get("/health")
-def health() -> dict[str, str]:
+def health(
+    authorization: Optional[str] = Header(default=None),
+    x_api_token: Optional[str] = Header(default=None),
+) -> dict[str, str]:
+    verify_api_token(authorization, x_api_token)
     try:
         with psycopg.connect(dsn()) as conn:
             with conn.cursor() as cur:
@@ -60,7 +82,12 @@ def health() -> dict[str, str]:
 
 
 @app.post("/write")
-def write_memory(payload: MemoryWrite) -> dict[str, Any]:
+def write_memory(
+    payload: MemoryWrite,
+    authorization: Optional[str] = Header(default=None),
+    x_api_token: Optional[str] = Header(default=None),
+) -> dict[str, Any]:
+    verify_api_token(authorization, x_api_token)
     sql = """
     INSERT INTO memory_items (
       content, summary, source, actor, session_id, topic, tags, metadata, embedding
@@ -71,6 +98,7 @@ def write_memory(payload: MemoryWrite) -> dict[str, Any]:
     RETURNING id, created_at;
     """
     params = payload.model_dump()
+    params["metadata"] = Jsonb(params.get("metadata", {}))
 
     try:
         with psycopg.connect(dsn()) as conn:
@@ -84,7 +112,12 @@ def write_memory(payload: MemoryWrite) -> dict[str, Any]:
 
 
 @app.post("/search")
-def search_memory(payload: MemorySearch) -> dict[str, Any]:
+def search_memory(
+    payload: MemorySearch,
+    authorization: Optional[str] = Header(default=None),
+    x_api_token: Optional[str] = Header(default=None),
+) -> dict[str, Any]:
+    verify_api_token(authorization, x_api_token)
     filters = ["TRUE"]
     params: dict[str, Any] = {
         "query": payload.query,

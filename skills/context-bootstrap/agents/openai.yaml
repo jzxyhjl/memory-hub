@@ -1,0 +1,3 @@
+interface:
+  display_name: "Context Bootstrap"
+  short_description: "Restore session context from file + memory-hub"

@@ -33,6 +33,7 @@ services:
       DB_PASSWORD: ${POSTGRES_PASSWORD}
       API_PORT: ${API_PORT:-8787}
       PG_TSV_CONFIG: ${PG_TSV_CONFIG:-simple}
+      MEMORY_API_TOKEN: ${MEMORY_API_TOKEN:-}
     command: >
       sh -c "pip install --no-cache-dir -r requirements.txt &&
              uvicorn app:app --host 0.0.0.0 --port $${API_PORT:-8787}"

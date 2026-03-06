@@ -2,7 +2,13 @@
 set -euo pipefail
 
 API_BASE="${MEMORY_API_BASE:-http://127.0.0.1:8787}"
+API_TOKEN="${MEMORY_API_TOKEN:-}"
 CMD="${1:-}"
+AUTH_HEADER=()
+
+if [[ -n "$API_TOKEN" ]]; then
+  AUTH_HEADER=(-H "authorization: Bearer ${API_TOKEN}")
+fi
 
 if [[ -z "$CMD" ]]; then
   echo "Usage: $0 write|search [args...]"
@@ -18,6 +24,7 @@ case "$CMD" in
     fi
     TOPIC="${3:-general}"
     curl -sS -X POST "$API_BASE/write" \
+      "${AUTH_HEADER[@]}" \
       -H 'content-type: application/json' \
       -d "{\"content\":\"${CONTENT}\",\"source\":\"codex\",\"actor\":\"codex\",\"topic\":\"${TOPIC}\",\"tags\":[\"codex\",\"decision\"]}"
     ;;
@@ -29,6 +36,7 @@ case "$CMD" in
     fi
     LIMIT="${3:-8}"
     curl -sS -X POST "$API_BASE/search" \
+      "${AUTH_HEADER[@]}" \
       -H 'content-type: application/json' \
       -d "{\"query\":\"${QUERY}\",\"limit\":${LIMIT},\"tags\":[\"codex\",\"openclaw\"]}"
     ;;
