@@ -21,7 +21,7 @@ It combines short-term state from `SESSION_CONTEXT.md` and long-term state from 
 
 1. Run the bootstrap script:
 ```bash
-bash /Users/ggsk/.codex/skills/context-bootstrap/scripts/bootstrap_context.sh "<query>" <limit>
+context-bootstrap "<query>" <limit>
 ```
 
 2. Use script output to build startup prompt:
@@ -36,9 +36,14 @@ bash /Users/ggsk/.codex/skills/context-bootstrap/scripts/bootstrap_context.sh "<
 
 ## Defaults And Assumptions
 
-- `SESSION_CONTEXT.md` path defaults to `/Users/ggsk/.codex/SESSION_CONTEXT.md`
+- `SESSION_CONTEXT.md` path auto-discovery order:
+  - `SESSION_CONTEXT_FILE` (if provided)
+  - `./SESSION_CONTEXT.md`
+  - `~/.codex/SESSION_CONTEXT.md`
+  - `~/.context-bootstrap/SESSION_CONTEXT.md`
+  - `<memory-hub>/SESSION_CONTEXT.md`
 - memory API defaults to `http://127.0.0.1:8787`
-- If `MEMORY_API_TOKEN` is missing, the script tries loading `/Users/ggsk/memory-hub/.env`
+- If `MEMORY_API_TOKEN` is missing, the script tries `.env` auto-discovery.
 - If memory search fails, continue with file context only (do not block)
 
 ## Script

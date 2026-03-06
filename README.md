@@ -15,7 +15,7 @@
 
 ## 快速开始
 ```bash
-cd /Users/ggsk/memory-hub
+cd /path/to/memory-hub
 cp .env.example .env
 bash scripts/start.sh
 ```
@@ -62,18 +62,25 @@ curl -sS -X POST http://127.0.0.1:8787/search \
 - `docs/openclaw-integration.md`: OpenClaw 接入
 - `docs/codex-integration.md`: Codex 接入
 - `skills/context-bootstrap/`: 跨窗口/跨机器上下文恢复 skill
-- `scripts/install_context_skill.sh`: 一键安装 skill 到 `~/.codex/skills`
+- `scripts/bootstrap_context.sh`: 统一上下文恢复命令
+- `scripts/install_context_skill.sh`: 安装 skill 并创建全局命令 `context-bootstrap`
 
-## Skill 同步与安装
-将仓库中的 skill 安装到当前机器：
+## 统一执行步骤（Codex / Claude / 新环境一致）
+1. 安装统一命令（只需一次）：
 ```bash
-cd /Users/ggsk/memory-hub
+cd /path/to/memory-hub
 bash scripts/install_context_skill.sh
+export PATH="$HOME/.local/bin:$PATH"
 ```
 
-安装后可直接执行：
+2. 每个新窗口先执行同一条命令：
 ```bash
-bash ~/.codex/skills/context-bootstrap/scripts/bootstrap_context.sh "飞书 联调 鉴权 记忆" 5
+context-bootstrap "飞书 联调 鉴权 记忆" 5
+```
+
+3. 如未安装全局命令，也可直接运行仓库脚本：
+```bash
+bash scripts/bootstrap_context.sh "飞书 联调 鉴权 记忆" 5
 ```
 
 ## 生产建议
